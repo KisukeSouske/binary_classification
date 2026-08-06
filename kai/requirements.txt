@@ -1,0 +1,5 @@
+# requirements.txt
+numpy
+
+# só pra rodar os testes, não é dependência da lib em si
+pytest
