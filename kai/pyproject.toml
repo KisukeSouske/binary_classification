@@ -7,5 +7,12 @@ name = "binary_classifier"
 version = "0.1.0"
 dependencies = ["numpy"]
 
+[project.optional-dependencies]
+dev = ["pytest"]
+
 [tool.setuptools.packages.find]
 include = ["binary_classifier*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
