@@ -20,16 +20,6 @@ def logit(p, eps=1e-12):
     p = np.clip(p, eps, 1 - eps)
     return np.log(p / (1 - p))
 
-def log_loss(y_true, y_pred, eps=1e-12) -> float:
-    """
-    Computes the log loss (binary cross-entropy loss) for binary classification.
-    y_true: true labels (0 or 1)
-    y_pred: predicted probabilities (between 0 and 1)
-    """
-    # Clip predictions to avoid log(0) which is undefined
-    y_pred = np.clip(y_pred, eps, 1 - eps)
-    return -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
-
 def binary_cross_entropy_gradient(y_true, y_pred, X) -> tuple[np.ndarray, float]:
     """
     Computes the gradient of the binary cross-entropy loss with respect to weights and bias.
@@ -43,3 +33,10 @@ def binary_cross_entropy_gradient(y_true, y_pred, X) -> tuple[np.ndarray, float]
     dw = (1 / n_samples) * np.dot(X.T, error)
     db = (1 / n_samples) * np.sum(error)
     return dw, db
+
+def confusion_matrix(y_true: np.ndarray, y_pred_class: np.ndarray) -> dict[str, int]:
+    tp = int(np.sum((y_true == 1) & (y_pred_class == 1)))
+    tn = int(np.sum((y_true == 0) & (y_pred_class == 0)))
+    fp = int(np.sum((y_true == 0) & (y_pred_class == 1)))
+    fn = int(np.sum((y_true == 1) & (y_pred_class == 0)))
+    return {"tp": tp, "tn": tn, "fp": fp, "fn": fn}

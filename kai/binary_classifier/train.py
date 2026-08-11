@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from binary_classifier import core
+from binary_classifier import core, metrics
 import numpy as np
 
 @dataclass(frozen=True)
@@ -73,7 +73,7 @@ def fit_gradient_descent(X,
 
         eta = bias + X @ weights
         y_pred = core.sigmoid(eta)
-        epoch_loss = core.log_loss(y, y_pred)
+        epoch_loss = metrics.log_loss(y, y_pred)
         if not np.isfinite(epoch_loss):
             raise ValueError(
                 f"Training diverged at epoch {epoch}: loss became {epoch_loss}. "
