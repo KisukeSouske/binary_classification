@@ -36,7 +36,7 @@ def print_metrics(y_true: np.ndarray, y_pred_class: np.ndarray):
     acc = metrics.accuracy(y_true, y_pred_class)
     prec = metrics.precision(y_true, y_pred_class)
     rec = metrics.recall(y_true, y_pred_class)
-    matrix = core.confusion_matrix(y_true, y_pred_class)
+    matrix = metrics.confusion_matrix(y_true, y_pred_class)
 
     print(f"Accuracy: {acc:.4f}")
     print(f"Precision: {prec:.4f}")
@@ -70,7 +70,7 @@ def main():
     y_pred_prob = fit.sigmoid_predictor(X_test)
     y_pred_class = (y_pred_prob >= 0.5).astype(float)
 
-    test_loss = metrics.log_loss(y_test, y_pred_prob)
+    test_loss = core.log_loss(y_test, y_pred_prob)
     print_metrics(y_test, y_pred_class)
 
     plotting.plot_metrics_vs_threshold(y_test, y_pred_prob)

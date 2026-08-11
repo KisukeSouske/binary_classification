@@ -33,6 +33,19 @@ def test_sigmoid_saturates_at_clip_boundary():
     assert core.sigmoid(clip + 1000) == core.sigmoid(clip)
     assert core.sigmoid(-clip - 1000) == core.sigmoid(-clip)
 
+# Logit tests
+def test_logit_is_inverse_of_sigmoid():
+    x = np.array([-10.0, -1.0, 0.0, 1.0, 10.0])
+    np.testing.assert_allclose(core.logit(core.sigmoid(x)), x, atol=1e-6)
+
+def test_logit_edge_cases_are_finite():
+    # p=0 and p=1 would be -inf/+inf without clipping; logit should clip
+    # like log_loss does and stay finite.
+    assert np.isfinite(core.logit(0.0))
+    assert np.isfinite(core.logit(1.0))
+    assert core.logit(0.0) < 0
+    assert core.logit(1.0) > 0
+
 # Log loss tests
 def test_log_loss_almost_zero():
     # Test that log loss is almost zero for perfect predictions
@@ -65,19 +78,6 @@ def test_log_loss_is_the_mean_over_samples():
     y_pred = np.array([0.5, 0.25])
     expected = (-np.log(0.5) + -np.log(0.75)) / 2
     np.testing.assert_allclose(core.log_loss(y_true, y_pred), expected)
-
-# Logit tests
-def test_logit_is_inverse_of_sigmoid():
-    x = np.array([-10.0, -1.0, 0.0, 1.0, 10.0])
-    np.testing.assert_allclose(core.logit(core.sigmoid(x)), x, atol=1e-6)
-
-def test_logit_edge_cases_are_finite():
-    # p=0 and p=1 would be -inf/+inf without clipping; logit should clip
-    # like log_loss does and stay finite.
-    assert np.isfinite(core.logit(0.0))
-    assert np.isfinite(core.logit(1.0))
-    assert core.logit(0.0) < 0
-    assert core.logit(1.0) > 0
 
 # Gradient checking
 def test_binary_cross_entropy_gradient_matches_numerical_gradient():
