@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
-from binary_classifier import core, train, preprocessing, metrics
+from binary_classifier import core, train, preprocessing, metrics, plotting
 
 RANDOM_STATE = 42
 TEST_FRACTION = 0.2
@@ -71,6 +72,9 @@ def main():
 
     test_loss = metrics.log_loss(y_test, y_pred_prob)
     print_metrics(y_test, y_pred_class)
+
+    plotting.plot_metrics_vs_threshold(y_test, y_pred_prob)
+    plt.show()
 
 
 if __name__ == "__main__":

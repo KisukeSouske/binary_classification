@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "binary_classifier"
 version = "0.1.0"
-dependencies = ["numpy"]
+dependencies = ["numpy", "matplotlib"]
 
 [project.optional-dependencies]
 dev = ["pytest"]
