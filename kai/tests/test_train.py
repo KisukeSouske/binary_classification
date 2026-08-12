@@ -10,7 +10,7 @@ def test_initial_bias_matches_base_rate():
     y = np.zeros(n)
     y[:10] = 1.0  # 5% positive
 
-    fit = train.fit_gradient_descent(
+    fit = train.ClassifierFit().fit(
         X, y, learning_rate=0.0, epochs=1, batch_size=n, random_state=0
     )
 
@@ -27,16 +27,16 @@ def test_random_state_reproducibility():
     probs = core.sigmoid(X @ true_w + true_b)
     y = (rng.random(n) < probs).astype(float)
 
-    fit1 = train.fit_gradient_descent(
+    fit1 = train.ClassifierFit().fit(
         X, y, learning_rate=0.1, epochs=20, batch_size=32, random_state=42
     )
-    fit2 = train.fit_gradient_descent(
+    fit2 = train.ClassifierFit().fit(
         X, y, learning_rate=0.1, epochs=20, batch_size=32, random_state=42
     )
     np.testing.assert_allclose(fit1.weights, fit2.weights)
     assert fit1.bias == fit2.bias
 
-    fit3 = train.fit_gradient_descent(
+    fit3 = train.ClassifierFit().fit(
         X, y, learning_rate=0.1, epochs=20, batch_size=32, random_state=7
     )
     assert not np.allclose(fit1.weights, fit3.weights)
@@ -51,7 +51,7 @@ def test_recovers_true_parameters():
     probs = core.sigmoid(X @ true_w + true_b)
     y = (rng.random(n) < probs).astype(float)
 
-    fit = train.fit_gradient_descent(
+    fit = train.ClassifierFit().fit(
         X, y, learning_rate=0.5, epochs=500, batch_size=200, random_state=3
     )
 
@@ -67,7 +67,7 @@ def test_loss_decreases_over_training():
     probs = core.sigmoid(X @ true_w)
     y = (rng.random(n) < probs).astype(float)
 
-    fit = train.fit_gradient_descent(
+    fit = train.ClassifierFit().fit(
         X, y, learning_rate=0.3, epochs=200, batch_size=50, tolerance=0.0, random_state=5
     )
 
@@ -94,7 +94,7 @@ def test_diverges_with_huge_learning_rate():
     rng.shuffle(y)
 
     with pytest.raises(ValueError):
-        train.fit_gradient_descent(
+        train.ClassifierFit().fit(
             X, y, learning_rate=1e308, epochs=5, batch_size=1, random_state=6
         )
 
@@ -103,7 +103,7 @@ def test_stops_early_for_trivially_separable_data():
     X = np.array([[-1.0], [-1.0], [1.0], [1.0]])
     y = np.array([0.0, 0.0, 1.0, 1.0])
 
-    fit = train.fit_gradient_descent(
+    fit = train.ClassifierFit().fit(
         X, y, learning_rate=1.0, epochs=10_000, batch_size=4, tolerance=1e-2, random_state=7
     )
 

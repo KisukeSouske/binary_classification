@@ -25,6 +25,23 @@ def f1_score(y_true: np.ndarray, y_pred_class: np.ndarray) -> float:
     rec = recall(y_true, y_pred_class)
     return float(2 * prec * rec / (prec + rec)) if (prec + rec) > 0 else 0.0
 
+def classification_report(
+    y_true: np.ndarray, y_pred_class: np.ndarray
+) -> dict[str, float | dict[str, int]]:
+    """
+    Computes every summary metric for one set of hard predictions.
+    y_true: true labels (0 or 1)
+    y_pred_class: predicted labels (0 or 1)
+    Returns: dict with accuracy, precision, recall, f1_score and confusion_matrix
+    """
+    return {
+        "accuracy": accuracy(y_true, y_pred_class),
+        "precision": precision(y_true, y_pred_class),
+        "recall": recall(y_true, y_pred_class),
+        "f1_score": f1_score(y_true, y_pred_class),
+        "confusion_matrix": confusion_matrix(y_true, y_pred_class),
+    }
+
 def metrics_by_threshold(
     y_true: np.ndarray, y_pred_prob: np.ndarray, thresholds: np.ndarray
 ) -> dict[str, np.ndarray]:

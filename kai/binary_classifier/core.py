@@ -43,3 +43,21 @@ def log_loss(y_true, y_pred, eps=1e-12) -> float:
     # Clip predictions to avoid log(0) which is undefined
     y_pred = np.clip(y_pred, eps, 1 - eps)
     return -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
+
+def ridge_penalty(weights):
+    """
+    Computes the ridge (L2) penalty for regularization.
+    weights: model weights (numpy array)
+    alpha: regularization strength
+    Returns: ridge penalty value
+    """
+    return np.sum(weights ** 2)
+
+def lasso_penalty(weights):
+    """
+    Computes the lasso (L1) penalty for regularization.
+    weights: model weights (numpy array)
+    Returns: lasso penalty value
+    """
+    return np.sum(np.abs(weights))
+

@@ -60,6 +60,18 @@ def test_mismatched_length_raises():
         metrics.accuracy(y_true, y_pred)
 
 
+# Classification report tests
+def test_classification_report_matches_the_individual_metrics(y_true_pred):
+    y_true, y_pred = y_true_pred
+    report = metrics.classification_report(y_true, y_pred)
+
+    assert report["accuracy"] == metrics.accuracy(y_true, y_pred)
+    assert report["precision"] == metrics.precision(y_true, y_pred)
+    assert report["recall"] == metrics.recall(y_true, y_pred)
+    assert report["f1_score"] == metrics.f1_score(y_true, y_pred)
+    assert report["confusion_matrix"] == metrics.confusion_matrix(y_true, y_pred)
+
+
 # Metrics-by-threshold tests
 def test_metrics_by_threshold_matches_pointwise_metrics():
     rng = np.random.default_rng(0)
