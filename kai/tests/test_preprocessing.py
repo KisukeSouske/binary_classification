@@ -4,25 +4,37 @@ import pytest
 
 
 # Standardize tests
-def test_standardize_centers_and_scales_the_train_set():
+def test_standardize_centers_and_scales():
     rng = np.random.default_rng(0)
-    X_train = rng.normal(loc=5.0, scale=3.0, size=(200, 2))
-    X_test = rng.normal(loc=5.0, scale=3.0, size=(50, 2))
+    X = rng.normal(loc=5.0, scale=3.0, size=(200, 2))
 
-    X_train_std, _ = preprocessing.standardize(X_train, X_test)
+    X_std, mean, std = preprocessing.standardize(X)
 
-    np.testing.assert_allclose(X_train_std.mean(axis=0), 0.0, atol=1e-12)
-    np.testing.assert_allclose(X_train_std.std(axis=0), 1.0, atol=1e-12)
+    np.testing.assert_allclose(X_std.mean(axis=0), 0.0, atol=1e-12)
+    np.testing.assert_allclose(X_std.std(axis=0), 1.0, atol=1e-12)
+    np.testing.assert_allclose(mean, X.mean(axis=0))
+    np.testing.assert_allclose(std, X.std(axis=0))
 
 
-def test_standardize_uses_train_statistics_for_the_test_set():
-    # The test set must not leak its own mean/std into the transform.
+def test_standardize_statistics_transform_new_data():
+    # The returned mean/std are what lets a test set be scaled with the TRAIN
+    # statistics, instead of leaking its own.
     X_train = np.array([[0.0], [2.0]])
-    X_test = np.array([[4.0]])
 
-    _, X_test_std = preprocessing.standardize(X_train, X_test)
+    _, mean, std = preprocessing.standardize(X_train)
+    X_test_std = (np.array([[4.0]]) - mean) / std
 
     np.testing.assert_allclose(X_test_std, [[3.0]])  # (4 - 1) / 1
+
+
+def test_standardize_keeps_constant_features_finite():
+    X = np.array([[1.0, 7.0], [2.0, 7.0], [3.0, 7.0]])
+
+    X_std, _, std = preprocessing.standardize(X)
+
+    assert np.all(np.isfinite(X_std))
+    np.testing.assert_allclose(X_std[:, 1], 0.0)
+    assert std[1] == 1.0
 
 
 # Train/test split tests

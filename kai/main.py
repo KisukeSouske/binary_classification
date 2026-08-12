@@ -17,7 +17,8 @@ def main():
     X_train, X_test, y_train, y_test = preprocessing.train_test_split(
         X, y, TEST_FRACTION, RANDOM_STATE
     )
-    X_train, X_test = preprocessing.standardize(X_train, X_test)
+    X_train, feature_mean, feature_std = preprocessing.standardize(X_train)
+    X_test = (X_test - feature_mean) / feature_std
 
     model = train.ClassifierFit()
     model.fit(
@@ -30,8 +31,8 @@ def main():
     )
     print(f"Trained for {len(model.loss_history)} epochs, final train loss={model.loss_history[-1]:.4f}")
 
-    y_pred_prob = model.sigmoid_predictor(X_test)
-    y_pred_class = (y_pred_prob >= 0.5).astype(float)
+    y_pred_prob = model.predict(X_test)
+    y_pred_class = model.predict_class(X_test)
 
     report = metrics.classification_report(y_test, y_pred_class)
     print(f"Test loss: {core.log_loss(y_test, y_pred_prob):.4f}")

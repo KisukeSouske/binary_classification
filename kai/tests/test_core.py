@@ -80,7 +80,7 @@ def test_log_loss_is_the_mean_over_samples():
     np.testing.assert_allclose(core.log_loss(y_true, y_pred), expected)
 
 # Gradient checking
-def test_binary_cross_entropy_gradient_matches_numerical_gradient():
+def test_log_loss_derivation_matches_numerical_gradient():
     rng = np.random.default_rng(0)
     X = rng.normal(size=(5, 3))
     y = np.array([0.0, 1.0, 1.0, 0.0, 1.0])
@@ -93,7 +93,7 @@ def test_binary_cross_entropy_gradient_matches_numerical_gradient():
         return core.log_loss(y, y_pred)
 
     y_pred = core.sigmoid(X @ w + b)
-    analytic_dw, analytic_db = core.binary_cross_entropy_gradient(y, y_pred, X)
+    analytic_dw, analytic_db = core.log_loss_derivation(y, y_pred, X)
 
     numeric_dw = np.zeros_like(w)
     for i in range(len(w)):
