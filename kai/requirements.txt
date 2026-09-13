@@ -1,5 +1,6 @@
 # requirements.txt
 numpy
+pillow  # leitura e redimensionamento das fotos
 
 # só pra rodar os testes, não é dependência da lib em si
 pytest
