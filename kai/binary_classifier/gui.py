@@ -10,7 +10,8 @@ from PIL import Image, ImageOps, ImageTk
 
 from binary_classifier.pipeline import PhotoClassifier, format_report, train_on_folders
 
-PREVIEW_SIZE = 380
+PREVIEW_MAX = 380          # preview side in pixels on a large screen
+PREVIEW_SCREEN_SHARE = 0.45  # never taller than this fraction of the screen
 
 
 class App(tk.Tk):
@@ -24,6 +25,7 @@ class App(tk.Tk):
 
         self.title("Classificador de gatas")
         self.resizable(False, False)
+        self.preview_size = min(PREVIEW_MAX, int(self.winfo_screenheight() * PREVIEW_SCREEN_SHARE))
         self._build()
 
         if self.model_path.exists():
@@ -40,17 +42,26 @@ class App(tk.Tk):
         self.train_button = tk.Button(buttons, text="Treinar novamente", width=16, command=self.retrain)
         self.train_button.pack(side="left", padx=8)
 
-        self.canvas = tk.Label(self, width=PREVIEW_SIZE, height=PREVIEW_SIZE, bg="#222",
-                               text="Nenhuma foto", fg="#aaa")
-        self.canvas.pack(padx=10)
+        body = tk.Frame(self, padx=10)
+        body.pack()
 
-        self.result = tk.Label(self, text="", font=("Segoe UI", 20, "bold"), pady=6)
+        # A Label's width/height are in text units until it holds an image, so
+        # the fixed pixel size lives on a frame that doesn't resize to its child.
+        left = tk.Frame(body)
+        left.pack(side="left", anchor="n")
+        box = tk.Frame(left, width=self.preview_size, height=self.preview_size, bg="#222")
+        box.pack_propagate(False)
+        box.pack()
+        self.canvas = tk.Label(box, bg="#222", text="Nenhuma foto", fg="#aaa")
+        self.canvas.pack(fill="both", expand=True)
+
+        self.result = tk.Label(left, text="", font=("Segoe UI", 18, "bold"), pady=4)
         self.result.pack()
-        self.confidence = tk.Label(self, text="", font=("Segoe UI", 11))
+        self.confidence = tk.Label(left, text="", font=("Segoe UI", 10))
         self.confidence.pack()
 
-        self.report = tk.Text(self, width=58, height=14, font=("Consolas", 9), state="disabled")
-        self.report.pack(padx=10, pady=(8, 4))
+        self.report = tk.Text(body, width=52, height=16, font=("Consolas", 9), state="disabled")
+        self.report.pack(side="left", anchor="n", padx=(10, 0))
 
         self.status = tk.Label(self, text="", anchor="w", fg="#555", padx=10, pady=4)
         self.status.pack(fill="x")
@@ -82,9 +93,9 @@ class App(tk.Tk):
             messagebox.showerror("Erro", f"Não consegui abrir a imagem:\n{exc}")
             return
 
-        preview.thumbnail((PREVIEW_SIZE, PREVIEW_SIZE))
+        preview.thumbnail((self.preview_size, self.preview_size))
         self._preview = ImageTk.PhotoImage(preview)
-        self.canvas.config(image=self._preview, text="", width=PREVIEW_SIZE, height=PREVIEW_SIZE)
+        self.canvas.config(image=self._preview, text="")
 
         self.result.config(text=name)
         self.confidence.config(text=f"confiança: {confidence:.1%}")
