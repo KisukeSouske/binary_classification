@@ -6,10 +6,9 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox
 
-from PIL import ImageTk
+from PIL import Image, ImageOps, ImageTk
 
-from .features import load_image
-from .pipeline import CatClassifier, format_report, train
+from binary_classifier.pipeline import PhotoClassifier, format_report, train_on_folders
 
 PREVIEW_SIZE = 380
 
@@ -28,7 +27,7 @@ class App(tk.Tk):
         self._build()
 
         if self.model_path.exists():
-            self.classifier = CatClassifier.load(self.model_path)
+            self.classifier = PhotoClassifier.load(self.model_path)
             self._set_status(f"Modelo carregado: {self.model_path.name}")
         else:
             self.retrain()
@@ -76,14 +75,13 @@ class App(tk.Tk):
         if not path:
             return
         try:
-            img = load_image(path)
+            name, confidence = self.classifier.predict_image(path)
+            with Image.open(path) as opened:
+                preview = ImageOps.exif_transpose(opened).convert("RGB")
         except Exception as exc:
             messagebox.showerror("Erro", f"Não consegui abrir a imagem:\n{exc}")
             return
 
-        name, confidence = self.classifier.predict_image(img)
-
-        preview = img.copy()
         preview.thumbnail((PREVIEW_SIZE, PREVIEW_SIZE))
         self._preview = ImageTk.PhotoImage(preview)
         self.canvas.config(image=self._preview, text="", width=PREVIEW_SIZE, height=PREVIEW_SIZE)
@@ -99,7 +97,7 @@ class App(tk.Tk):
 
         def work():
             try:
-                classifier, report = train(self.negative_folder, self.positive_folder)
+                classifier, report = train_on_folders(self.negative_folder, self.positive_folder)
                 classifier.save(self.model_path)
                 self.after(0, self._training_done, classifier, report, None)
             except Exception as exc:

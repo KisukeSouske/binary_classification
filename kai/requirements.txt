@@ -1,6 +1,8 @@
 # requirements.txt
 numpy
 pillow  # leitura e redimensionamento das fotos
+matplotlib  # plotting.py
+pandas  # datasets.py (arroz)
 
 # só pra rodar os testes, não é dependência da lib em si
 pytest
