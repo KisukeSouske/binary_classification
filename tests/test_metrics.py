@@ -102,3 +102,34 @@ def test_metrics_by_threshold_recall_decreases_as_threshold_increases():
 
     recall = curves["recall"]
     assert all(recall[i] >= recall[i + 1] for i in range(len(recall) - 1))
+
+
+# Wilson interval tests
+def test_wilson_interval_perfect_score_is_not_certain():
+    # 17/17 on a small test set: the upper end reaches 1, the lower end
+    # must stay well below it
+    low, high = metrics.wilson_interval(17, 17)
+    assert high == pytest.approx(1.0)
+    assert 0.75 < low < 0.85
+
+
+def test_wilson_interval_contains_the_estimate_and_narrows_with_n():
+    low_small, high_small = metrics.wilson_interval(8, 10)
+    low_big, high_big = metrics.wilson_interval(800, 1000)
+    assert low_small < 0.8 < high_small
+    assert low_big < 0.8 < high_big
+    assert (high_big - low_big) < (high_small - low_small)
+
+
+def test_wilson_interval_known_value():
+    # 50/100, z=1.96: center 0.5, half width 1.96*sqrt(0.25/100 + 1.96^2/40000)/(1+1.96^2/100)
+    low, high = metrics.wilson_interval(50, 100)
+    assert low == pytest.approx(0.4038, abs=1e-4)
+    assert high == pytest.approx(0.5962, abs=1e-4)
+
+
+def test_wilson_interval_rejects_invalid_counts():
+    with pytest.raises(ValueError):
+        metrics.wilson_interval(5, 0)
+    with pytest.raises(ValueError):
+        metrics.wilson_interval(11, 10)

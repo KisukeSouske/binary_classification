@@ -1,6 +1,7 @@
 """
 Simple Tkinter window: pick a photo, see which cat the model thinks it is.
 """
+import queue
 import threading
 import tkinter as tk
 from pathlib import Path
@@ -12,6 +13,8 @@ from binary_classifier.pipeline import PhotoClassifier, format_report, train_on_
 
 PREVIEW_MAX = 380          # preview side in pixels on a large screen
 PREVIEW_SCREEN_SHARE = 0.45  # never taller than this fraction of the screen
+REPORT_LINES = 22            # visible lines of the report; the rest scrolls
+TRAINING_POLL_MS = 100       # how often the window checks if training finished
 
 
 class App(tk.Tk):
@@ -60,8 +63,15 @@ class App(tk.Tk):
         self.confidence = tk.Label(left, text="", font=("Segoe UI", 10))
         self.confidence.pack()
 
-        self.report = tk.Text(body, width=52, height=16, font=("Consolas", 9), state="disabled")
-        self.report.pack(side="left", anchor="n", padx=(10, 0))
+        # The cross-validation report is longer than the preview is tall, so it scrolls
+        report_box = tk.Frame(body)
+        report_box.pack(side="left", anchor="n", fill="y", padx=(10, 0))
+        scrollbar = tk.Scrollbar(report_box)
+        scrollbar.pack(side="right", fill="y")
+        self.report = tk.Text(report_box, width=66, height=REPORT_LINES, font=("Consolas", 9),
+                              state="disabled", wrap="none", yscrollcommand=scrollbar.set)
+        self.report.pack(side="left", fill="y")
+        scrollbar.config(command=self.report.yview)
 
         self.status = tk.Label(self, text="", anchor="w", fg="#555", padx=10, pady=4)
         self.status.pack(fill="x")
@@ -104,17 +114,30 @@ class App(tk.Tk):
     def retrain(self):
         self.open_button.config(state="disabled")
         self.train_button.config(state="disabled")
-        self._set_status("Treinando... (carregando as fotos das duas pastas)")
+        self._set_status("Treinando... (validação cruzada + modelo final)")
+
+        # Tk may only be touched from the main thread, so the worker just drops
+        # its result in a queue and the main loop polls for it.
+        results = queue.Queue()
 
         def work():
             try:
                 classifier, report = train_on_folders(self.negative_folder, self.positive_folder)
                 classifier.save(self.model_path)
-                self.after(0, self._training_done, classifier, report, None)
+                results.put((classifier, report, None))
             except Exception as exc:
-                self.after(0, self._training_done, None, None, exc)
+                results.put((None, None, exc))
 
         threading.Thread(target=work, daemon=True).start()
+        self._poll_training(results)
+
+    def _poll_training(self, results):
+        try:
+            outcome = results.get_nowait()
+        except queue.Empty:
+            self.after(TRAINING_POLL_MS, self._poll_training, results)
+            return
+        self._training_done(*outcome)
 
     def _training_done(self, classifier, report, error):
         self.open_button.config(state="normal")

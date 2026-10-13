@@ -10,6 +10,27 @@ def confusion_matrix(y_true: np.ndarray, y_pred_class: np.ndarray) -> dict[str, 
 def accuracy(y_true: np.ndarray, y_pred_class: np.ndarray) -> float:
     return float(np.mean(y_true == y_pred_class))
 
+def wilson_interval(n_correct: int, n_total: int, z: float = 1.96) -> tuple[float, float]:
+    """
+    Wilson score confidence interval for a proportion such as accuracy.
+    Unlike the normal approximation p +- z*sqrt(p(1-p)/n), it stays inside
+    [0, 1] and does not collapse to a zero-width interval at p = 0 or p = 1,
+    which is exactly the case of a "perfect" score on a small test set.
+    n_correct: number of successes
+    n_total: number of trials
+    z: normal quantile (1.96 -> 95% interval)
+    Returns: (lower, upper)
+    """
+    if n_total <= 0:
+        raise ValueError(f"n_total must be positive, got {n_total}.")
+    if not 0 <= n_correct <= n_total:
+        raise ValueError(f"n_correct must be in [0, {n_total}], got {n_correct}.")
+    p = n_correct / n_total
+    denominator = 1 + z ** 2 / n_total
+    center = (p + z ** 2 / (2 * n_total)) / denominator
+    half_width = z * np.sqrt(p * (1 - p) / n_total + z ** 2 / (4 * n_total ** 2)) / denominator
+    return float(max(0.0, center - half_width)), float(min(1.0, center + half_width))
+
 def precision(y_true: np.ndarray, y_pred_class: np.ndarray) -> float:
     tp = np.sum((y_true == 1) & (y_pred_class == 1))
     fp = np.sum((y_true == 0) & (y_pred_class == 1))
